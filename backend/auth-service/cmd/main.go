@@ -5,14 +5,11 @@ import (
 	"github.com/lera-guryan2222/auth-service/internal/repository"
 	"github.com/lera-guryan2222/auth-service/internal/router"
 	"github.com/lera-guryan2222/auth-service/internal/usecase"
-	"github.com/lera-guryan2222/auth-service/pkg/logger"
 
 	"go.uber.org/zap"
 )
 
 func main() {
-	// 1. Initialize logger
-	log := logger.NewLogger()
 
 	// 2. Initialize repository
 	userRepo := repository.NewInMemoryUserRepository()

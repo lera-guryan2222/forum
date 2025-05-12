@@ -3,8 +3,8 @@ package controller
 import (
 	"net/http"
 
-	"github.com/lera-guryan2222/auth-service/internal/usecase"
-	"github.com/lera-guryan2222/auth-service/pkg/auth"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/usecase"
+	"github.com/lera-guryan2222/forum/backend/auth-service/pkg/auth"
 
 	"github.com/gin-gonic/gin"
 )

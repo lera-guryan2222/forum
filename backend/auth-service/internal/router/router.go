@@ -1,15 +1,13 @@
 package router
 
 import (
-	"github.com/lera-guryan2222/auth-service/internal/controller"
-	"github.com/lera-guryan2222/auth-service/pkg/logger"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/controller"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(log logger.Logger, authController *controller.AuthController) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
