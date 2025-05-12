@@ -1,10 +1,11 @@
 package usecase
 
 import (
-	"auth-service/internal/entity"
-	"auth-service/internal/repository"
-	"auth-service/pkg/auth"
 	"errors"
+
+	"github.com/lera-guryan2222/auth-service/internal/entity"
+	"github.com/lera-guryan2222/auth-service/internal/repository"
+	"github.com/lera-guryan2222/auth-service/pkg/auth"
 
 	"golang.org/x/crypto/bcrypt"
 )

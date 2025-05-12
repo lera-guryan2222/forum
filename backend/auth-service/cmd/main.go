@@ -1,11 +1,11 @@
 package main
 
 import (
-	"auth-service/internal/controller"
-	"auth-service/internal/repository"
-	"auth-service/internal/router"
-	"auth-service/internal/usecase"
-	"auth-service/pkg/logger"
+	"github.com/lera-guryan2222/auth-service/internal/controller"
+	"github.com/lera-guryan2222/auth-service/internal/repository"
+	"github.com/lera-guryan2222/auth-service/internal/router"
+	"github.com/lera-guryan2222/auth-service/internal/usecase"
+	"github.com/lera-guryan2222/auth-service/pkg/logger"
 
 	"go.uber.org/zap"
 )

@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"auth-service/internal/usecase"
-	"auth-service/pkg/auth"
 	"net/http"
+
+	"github.com/lera-guryan2222/auth-service/internal/usecase"
+	"github.com/lera-guryan2222/auth-service/pkg/auth"
 
 	"github.com/gin-gonic/gin"
 )

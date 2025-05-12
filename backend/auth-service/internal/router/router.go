@@ -1,8 +1,8 @@
 package router
 
 import (
-	"auth-service/internal/controller"
-	"auth-service/pkg/logger"
+	"github.com/lera-guryan2222/auth-service/internal/controller"
+	"github.com/lera-guryan2222/auth-service/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

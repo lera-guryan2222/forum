@@ -1,10 +1,11 @@
 package repository
 
 import (
-	"auth-service/internal/entity"
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/lera-guryan2222/auth-service/internal/entity"
 )
 
 type UserRepository interface {
