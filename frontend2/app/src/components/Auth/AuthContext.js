@@ -3,14 +3,6 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api/auth',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
-
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
@@ -23,6 +15,15 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [authToken, setAuthToken] = useState(localStorage.getItem('token'));
+
+    const api = axios.create({
+        baseURL: 'http://localhost:8080/api/auth',
+        withCredentials: true,
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
 
     useEffect(() => {
         checkAuth();
@@ -30,22 +31,20 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
+            if (!authToken) {
                 setLoading(false);
                 return;
             }
 
-            // Verify token by making an authenticated request
             const response = await api.get('/verify', {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${authToken}` }
             });
 
             setIsAuthenticated(true);
             setUser(response.data.user);
         } catch (error) {
             console.error('Auth check failed:', error);
-            localStorage.removeItem('token');
+            logout();
         } finally {
             setLoading(false);
         }
@@ -56,6 +55,7 @@ export const AuthProvider = ({ children }) => {
             const response = await api.post('/login', { email, password });
             
             localStorage.setItem('token', response.data.access_token);
+            setAuthToken(response.data.access_token);
             setIsAuthenticated(true);
             setUser(response.data.user);
             return { success: true };
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
             console.error('Login failed:', error);
             return {
                 success: false,
-                error: error.response?.data?.error || 'Login failed'
+                error: error.response?.data?.message || 'Login failed'
             };
         }
     };
@@ -78,26 +78,24 @@ export const AuthProvider = ({ children }) => {
             
             if (response.data.access_token) {
                 localStorage.setItem('token', response.data.access_token);
+                setAuthToken(response.data.access_token);
                 setIsAuthenticated(true);
                 setUser(response.data.user);
                 return { success: true };
-            } else {
-                return {
-                    success: false,
-                    error: 'Registration failed - no token received'
-                };
             }
+            return { success: false, error: 'No token received' };
         } catch (error) {
             console.error('Registration failed:', error);
             return {
                 success: false,
-                error: error.response?.data?.error || 'Registration failed'
+                error: error.response?.data?.message || 'Registration failed'
             };
         }
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        setAuthToken(null);
         setIsAuthenticated(false);
         setUser(null);
     };
@@ -106,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         user,
         loading,
+        authToken,
         login,
         register,
         logout
@@ -113,7 +112,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {loading ? <div>Loading...</div> : children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

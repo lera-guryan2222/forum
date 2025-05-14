@@ -1,13 +1,13 @@
 package router
 
 import (
-	"github.com/lera-guryan2222/forum/backend/auth-service/internal/controller"
-
 	"github.com/gin-gonic/gin"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/controller"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+func SetupRouter(authController *controller.AuthController) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {

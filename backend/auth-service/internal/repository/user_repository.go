@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lera-guryan2222/auth-service/internal/entity"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/entity"
 )
 
 type UserRepository interface {

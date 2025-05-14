@@ -1,15 +1,15 @@
 package usecase
 
 import (
-	"forum-service/internal/entity"
-	"forum-service/internal/repository"
+	"github.com/lera-guryan2222/forum/backend/forum-service/internal/entity"
+	"github.com/lera-guryan2222/forum/backend/forum-service/internal/repository"
 )
 
 type PostUseCase interface {
-	CreatePost(post *entity.PostRequest, authorID uint) (*entity.PostResponse, error)
-	GetAllPosts() ([]entity.PostResponse, error)
-	GetPostByID(id uint) (*entity.PostResponse, error)
-	UpdatePost(id uint, update *entity.PostRequest) (*entity.PostResponse, error)
+	CreatePost(post *entity.Post) (*entity.Post, error)
+	GetAllPosts() ([]entity.Post, error)
+	GetPostByID(id uint) (*entity.Post, error)
+	UpdatePost(post *entity.Post) (*entity.Post, error)
 	DeletePost(id uint) error
 }
 
@@ -18,29 +18,25 @@ type postUseCase struct {
 }
 
 func NewPostUseCase(postRepo repository.PostRepository) PostUseCase {
-	return &postUseCase{postRepo}
+	return &postUseCase{postRepo: postRepo}
 }
 
-func (uc *postUseCase) CreatePost(req *entity.PostRequest, authorID uint) (*entity.PostResponse, error) {
-	post := &entity.Post{
-		Title:    req.Title,
-		Content:  req.Content,
-		AuthorID: authorID,
-	}
-
-	createdPost, err := uc.postRepo.Create(post)
-	if err != nil {
-		return nil, err
-	}
-
-	return &entity.PostResponse{
-		ID:        createdPost.ID,
-		Title:     createdPost.Title,
-		Content:   createdPost.Content,
-		AuthorID:  createdPost.AuthorID,
-		CreatedAt: createdPost.CreatedAt,
-		UpdatedAt: createdPost.UpdatedAt,
-	}, nil
+func (uc *postUseCase) CreatePost(post *entity.Post) (*entity.Post, error) {
+	return uc.postRepo.Create(post)
 }
 
-// Реализации остальных методов аналогичны...
+func (uc *postUseCase) GetAllPosts() ([]entity.Post, error) {
+	return uc.postRepo.GetAll()
+}
+
+func (uc *postUseCase) GetPostByID(id uint) (*entity.Post, error) {
+	return uc.postRepo.GetByID(id)
+}
+
+func (uc *postUseCase) UpdatePost(post *entity.Post) (*entity.Post, error) {
+	return uc.postRepo.Update(post)
+}
+
+func (uc *postUseCase) DeletePost(id uint) error {
+	return uc.postRepo.Delete(id)
+}

@@ -1,6 +1,11 @@
 package entity
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var ErrInvalidPostData = errors.New("invalid post data: title and content required")
 
 type Post struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`

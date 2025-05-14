@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"forum-service/internal/entity"
+	"github.com/lera-guryan2222/forum/backend/forum-service/internal/entity"
 
 	"gorm.io/gorm"
 )

@@ -1,29 +1,35 @@
 package main
 
 import (
-	"github.com/lera-guryan2222/auth-service/internal/controller"
-	"github.com/lera-guryan2222/auth-service/internal/repository"
-	"github.com/lera-guryan2222/auth-service/internal/router"
-	"github.com/lera-guryan2222/auth-service/internal/usecase"
-
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/controller"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/repository"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/router"
+	"github.com/lera-guryan2222/forum/backend/auth-service/internal/usecase"
 	"go.uber.org/zap"
 )
 
 func main() {
+	log, _ := zap.NewProduction()
+	defer log.Sync()
 
-	// 2. Initialize repository
+	// Инициализация репозитория
 	userRepo := repository.NewInMemoryUserRepository()
 
-	// 3. Initialize usecase and controller
+	// Инициализация usecase и controller
 	authUsecase := usecase.NewAuthUsecase(userRepo)
-	authController := controller.NewAuthController(authUsecase)
+	authController := controller.NewAuthController(authUsecase) // Убрали log
 
-	// 4. Setup router
-	r := router.SetupRouter(log, authController)
+	// Настройка роутера
+	r := router.SetupRouter(authController) // Убрали log
 
-	// 5. Start server
-	log.Info("Auth Service is running on port :8080", zap.String("port", "8080"))
+	// Запуск сервера
+	log.Info("Auth Service is running",
+		zap.String("port", "8080"),
+	)
+
 	if err := r.Run(":8080"); err != nil {
-		log.Fatal("Failed to start server", zap.Error(err))
+		log.Fatal("Failed to start server",
+			zap.Error(err),
+		)
 	}
 }
