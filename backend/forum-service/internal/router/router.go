@@ -1,6 +1,7 @@
 package router
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/controller"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/delivery"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/entity"
+	"gorm.io/gorm"
 )
 
 // SetupRouter создает и настраивает маршруты приложения
@@ -31,11 +33,12 @@ func SetupRouter(
 	}))
 
 	// Логирование запросов
+	// Логирование запросов
 	router.Use(func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
 		latency := time.Since(start)
-		log.Printf("%s %s %s %v", c.Request.Method, c.Request.URL.Path, c.Writer.Status(), latency)
+		log.Printf("%s %s %s %v", c.Request.Method, c.Request.URL.Path, strconv.Itoa(c.Writer.Status()), latency)
 	})
 
 	// Группа публичных маршрутов
@@ -103,8 +106,15 @@ func getPostByIDHandler(ctrl controller.PostController) gin.HandlerFunc {
 
 func createPostHandler(ctrl controller.PostController) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Println("[POST] Attempting to create new post")
+
+		// Логируем входящий запрос
+		log.Printf("Incoming request: %s %s", c.Request.Method, c.Request.URL.Path)
+		log.Printf("Headers: %+v", c.Request.Header)
+
 		var req entity.PostRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Printf("[ERROR] Invalid request body: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":   "invalid request body",
 				"details": err.Error(),
@@ -112,9 +122,12 @@ func createPostHandler(ctrl controller.PostController) gin.HandlerFunc {
 			return
 		}
 
+		log.Printf("Parsed request: Title='%s', Content='%s'", req.Title, req.Content)
+
 		// Получаем ID автора из контекста
 		authUserID, exists := c.Get("userID")
 		if !exists {
+			log.Println("[ERROR] User ID not found in context")
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "user not authenticated",
 			})
@@ -123,39 +136,43 @@ func createPostHandler(ctrl controller.PostController) gin.HandlerFunc {
 
 		authorID, ok := authUserID.(uint)
 		if !ok {
+			log.Printf("[ERROR] Invalid user ID type: %T", authUserID)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "invalid user ID format",
 			})
 			return
 		}
 
+		log.Printf("Attempting to create post for user ID: %d", authorID)
+
 		resp, err := ctrl.CreatePost(&req, authorID)
 		if err != nil {
+			log.Printf("[ERROR] Failed to create post: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "failed to create post",
 				"details": err.Error(),
 			})
 			return
 		}
+
+		log.Printf("Successfully created post with ID: %d", resp.ID)
 		c.JSON(http.StatusCreated, resp)
 	}
 }
 
+// router.go
 func updatePostHandler(ctrl controller.PostController) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":   "invalid post ID",
-				"details": err.Error(),
-			})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID format"})
 			return
 		}
 
 		var req entity.PostRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error":   "invalid request body",
+				"error":   "validation error",
 				"details": err.Error(),
 			})
 			return
@@ -163,8 +180,12 @@ func updatePostHandler(ctrl controller.PostController) gin.HandlerFunc {
 
 		resp, err := ctrl.UpdatePost(uint(id), &req)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "failed to update post",
+				"error":   "update failed",
 				"details": err.Error(),
 			})
 			return

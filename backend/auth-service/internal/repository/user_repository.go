@@ -1,88 +1,65 @@
 package repository
 
 import (
+	"database/sql"
 	"errors"
-	"sync"
-	"time"
 
 	"github.com/lera-guryan2222/forum/backend/auth-service/internal/entity"
 )
 
+var ErrRecordNotFound = errors.New("record not found")
+
 type UserRepository interface {
 	FindByUsername(username string) (*entity.User, error)
 	FindByEmail(email string) (*entity.User, error)
-	FindByRefreshToken(refreshToken string) (*entity.User, error)
 	Create(user *entity.User) error
-	UpdateRefreshToken(userID string, refreshToken string) error
 }
 
-type InMemoryUserRepository struct {
-	users map[string]*entity.User
-	mu    sync.RWMutex
+type SQLUserRepository struct {
+	db *sql.DB
 }
 
-func NewInMemoryUserRepository() *InMemoryUserRepository {
-	return &InMemoryUserRepository{
-		users: make(map[string]*entity.User),
+func NewSQLUserRepository(db *sql.DB) UserRepository {
+	return &SQLUserRepository{db: db}
+}
+
+func (r *SQLUserRepository) FindByUsername(username string) (*entity.User, error) {
+	user := &entity.User{}
+	err := r.db.QueryRow(
+		"SELECT id, username, email, password FROM users WHERE username = $1",
+		username,
+	).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
 	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
-func (r *InMemoryUserRepository) FindByUsername(username string) (*entity.User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+func (r *SQLUserRepository) FindByEmail(email string) (*entity.User, error) {
+	user := &entity.User{}
+	err := r.db.QueryRow(
+		"SELECT id, username, email, password FROM users WHERE email = $1",
+		email,
+	).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
 
-	for _, user := range r.users {
-		if user.Username == username {
-			return user, nil
-		}
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
 	}
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
-func (r *InMemoryUserRepository) FindByEmail(email string) (*entity.User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	for _, user := range r.users {
-		if user.Email == email {
-			return user, nil
-		}
-	}
-	return nil, nil
-}
-
-func (r *InMemoryUserRepository) FindByRefreshToken(refreshToken string) (*entity.User, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	for _, user := range r.users {
-		if user.RefreshToken == refreshToken {
-			return user, nil
-		}
-	}
-	return nil, nil
-}
-
-func (r *InMemoryUserRepository) Create(user *entity.User) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if user == nil {
-		return errors.New("user cannot be nil")
-	}
-
-	user.ID = time.Now().Format("20060102150405")
-	r.users[user.ID] = user
-	return nil
-}
-
-func (r *InMemoryUserRepository) UpdateRefreshToken(userID string, refreshToken string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if user, exists := r.users[userID]; exists {
-		user.RefreshToken = refreshToken
-		return nil
-	}
-	return errors.New("user not found")
+func (r *SQLUserRepository) Create(user *entity.User) error {
+	return r.db.QueryRow(
+		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id",
+		user.Username,
+		user.Email,
+		user.Password,
+	).Scan(&user.ID)
 }

@@ -1,8 +1,0 @@
-
-CREATE TABLE messages (
-    id SERIAL PRIMARY KEY,   
-    user_id INT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-);

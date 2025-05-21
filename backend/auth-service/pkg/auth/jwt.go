@@ -3,41 +3,54 @@ package auth
 import (
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
-var (
-	accessSecret  = []byte("your-access-secret-key")
-	refreshSecret = []byte("your-refresh-secret-key")
-)
-
-type Claims struct {
-	UserID string `json:"user_id"`
-	jwt.StandardClaims
+type TokenManager interface {
+	GenerateAccessToken(userID uint) (string, error)
+	GenerateRefreshToken() (string, time.Time, error) // Изменено
 }
 
-func GenerateAccessToken(userID string) (string, error) {
-	expirationTime := time.Now().Add(15 * time.Minute)
-	claims := &Claims{
-		UserID: userID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
+type tokenManager struct {
+	accessTokenSecret  string
+	refreshTokenSecret string
+	accessTokenExpiry  time.Duration
+	refreshTokenExpiry time.Duration // Добавлено новое поле
+}
+
+func NewTokenManager(
+	accessSecret,
+	refreshSecret string,
+	accessExpiry,
+	refreshExpiry time.Duration, // Добавлен параметр
+) TokenManager {
+	return &tokenManager{
+		accessTokenSecret:  accessSecret,
+		refreshTokenSecret: refreshSecret,
+		accessTokenExpiry:  accessExpiry,
+		refreshTokenExpiry: refreshExpiry,
+	}
+}
+
+func (tm *tokenManager) GenerateRefreshToken() (string, time.Time, error) {
+	expiresAt := time.Now().Add(tm.refreshTokenExpiry)
+	claims := jwt.MapClaims{
+		"exp": expiresAt.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(accessSecret)
+	tokenString, err := token.SignedString([]byte(tm.refreshTokenSecret))
+	return tokenString, expiresAt, err
 }
 
-func GenerateRefreshToken(userID string) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
-		UserID: userID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
+// GenerateAccessToken остаётся без изменений
+
+func (tm *tokenManager) GenerateAccessToken(userID uint) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userID, // Теперь принимает uint напрямую
+		"exp":     time.Now().Add(tm.accessTokenExpiry).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(refreshSecret)
+	return token.SignedString([]byte(tm.accessTokenSecret))
 }

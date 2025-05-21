@@ -79,24 +79,25 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setError("");
 
-    try {
-      const result = await login(email, password);
-      if (result.success) {
-        navigate("/posts");
-      } else {
-        setError(result.error);
-      }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
+  try {
+    const result = await login(email, password);
+    if (result.success) {
+      navigate("/posts");
+    } else {
+      setError(result.error || "Login failed");
     }
-  };
+  } catch (err) {
+    setError(err.message || "An unexpected error occurred. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+  
 
   return (
     <Container>

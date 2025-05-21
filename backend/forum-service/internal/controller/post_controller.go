@@ -1,129 +1,109 @@
 package controller
 
 import (
-	"log"
+	"context"
+	"fmt"
 
+	"backend.com/forum/proto"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/entity"
-	"github.com/lera-guryan2222/forum/backend/forum-service/internal/usecase"
+	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
-type postControllerImpl struct {
-	postUseCase usecase.PostUseCase
-	logger      *log.Logger
+type PostController interface {
+	GetAllPosts() ([]*entity.Post, error)
+	GetPostByID(id uint) (*entity.Post, error)
+	CreatePost(req *entity.PostRequest, authorID uint) (*entity.Post, error)
+	UpdatePost(id uint, req *entity.PostRequest) (*entity.Post, error)
+	DeletePost(id uint) error
 }
 
-func NewPostController(postUseCase usecase.PostUseCase, logger *log.Logger) PostController {
-	return &postControllerImpl{
-		postUseCase: postUseCase,
-		logger:      logger,
-	}
+type postController struct {
+	client proto.ForumServiceClient
 }
 
-func (c *postControllerImpl) CreatePost(req *entity.PostRequest, authorID uint) (*entity.PostResponse, error) {
-	c.logger.Printf("Creating post. Title: %s, AuthorID: %d", req.Title, authorID)
+func NewPostController(conn *grpc.ClientConn) PostController {
+	client := proto.NewForumServiceClient(conn)
+	return &postController{client: client}
+}
 
-	if req.Title == "" || req.Content == "" {
-		return nil, entity.ErrInvalidPostData
-	}
-
-	post := &entity.Post{
-		Title:    req.Title,
-		Content:  req.Content,
-		AuthorID: authorID,
-	}
-
-	createdPost, err := c.postUseCase.CreatePost(post)
+func (c *postController) GetAllPosts() ([]*entity.Post, error) {
+	response, err := c.client.ListPosts(context.Background(), &proto.ListPostsRequest{
+		Page:     1,
+		PageSize: 10,
+	})
 	if err != nil {
-		c.logger.Printf("Error creating post: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to get posts: %w", err)
 	}
 
-	return &entity.PostResponse{
-		ID:        createdPost.ID,
-		Title:     createdPost.Title,
-		Content:   createdPost.Content,
-		AuthorID:  createdPost.AuthorID,
-		CreatedAt: createdPost.CreatedAt,
-		UpdatedAt: createdPost.UpdatedAt,
-	}, nil
-}
-
-func (c *postControllerImpl) GetAllPosts() ([]entity.PostResponse, error) {
-	c.logger.Println("Fetching all posts")
-	posts, err := c.postUseCase.GetAllPosts()
-	if err != nil {
-		c.logger.Printf("Error fetching posts: %v", err)
-		return nil, err
-	}
-
-	var responses []entity.PostResponse
-	for _, post := range posts {
-		responses = append(responses, entity.PostResponse{
-			ID:        post.ID,
-			Title:     post.Title,
-			Content:   post.Content,
-			AuthorID:  post.AuthorID,
-			CreatedAt: post.CreatedAt,
-			UpdatedAt: post.UpdatedAt,
+	posts := make([]*entity.Post, 0, len(response.Posts))
+	for _, post := range response.Posts {
+		posts = append(posts, &entity.Post{
+			Model:    gorm.Model{ID: uint(post.Id)}, // Используем правильное поле ID
+			Title:    post.Title,
+			Content:  post.Content,
+			AuthorID: uint(post.AuthorId), // Прямое преобразование uint64 -> uint
 		})
 	}
 
-	c.logger.Printf("Retrieved %d posts", len(responses))
-	return responses, nil
+	return posts, nil
 }
 
-func (c *postControllerImpl) GetPostByID(id uint) (*entity.PostResponse, error) {
-	c.logger.Printf("Fetching post with ID: %d", id)
-	post, err := c.postUseCase.GetPostByID(id)
+func (c *postController) GetPostByID(id uint) (*entity.Post, error) {
+	response, err := c.client.GetPost(context.Background(), &proto.GetPostRequest{
+		PostId: uint64(id), // Прямая передача числового ID
+	})
 	if err != nil {
-		c.logger.Printf("Error fetching post %d: %v", id, err)
-		return nil, err
+		return nil, fmt.Errorf("failed to get post: %w", err)
 	}
 
-	c.logger.Printf("Successfully fetched post with ID: %d", id)
-	return &entity.PostResponse{
-		ID:        post.ID,
-		Title:     post.Title,
-		Content:   post.Content,
-		AuthorID:  post.AuthorID,
-		CreatedAt: post.CreatedAt,
-		UpdatedAt: post.UpdatedAt,
+	return &entity.Post{
+		Model:    gorm.Model{ID: uint(response.Id)},
+		Title:    response.Title,
+		Content:  response.Content,
+		AuthorID: uint(response.AuthorId),
 	}, nil
 }
 
-func (c *postControllerImpl) UpdatePost(id uint, update *entity.PostRequest) (*entity.PostResponse, error) {
-	c.logger.Printf("Updating post with ID: %d", id)
-
-	post := &entity.Post{
-		ID:      id,
-		Title:   update.Title,
-		Content: update.Content,
-	}
-
-	updatedPost, err := c.postUseCase.UpdatePost(post)
+func (c *postController) CreatePost(req *entity.PostRequest, authorID uint) (*entity.Post, error) {
+	response, err := c.client.CreatePost(context.Background(), &proto.CreatePostRequest{
+		Title:    req.Title,
+		Content:  req.Content,
+		AuthorId: uint64(authorID), // Прямое преобразование uint -> uint64
+	})
 	if err != nil {
-		c.logger.Printf("Error updating post %d: %v", id, err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create post: %w", err)
 	}
 
-	c.logger.Printf("Successfully updated post with ID: %d", id)
-	return &entity.PostResponse{
-		ID:        updatedPost.ID,
-		Title:     updatedPost.Title,
-		Content:   updatedPost.Content,
-		AuthorID:  updatedPost.AuthorID,
-		CreatedAt: updatedPost.CreatedAt,
-		UpdatedAt: updatedPost.UpdatedAt,
+	return &entity.Post{
+		Model:    gorm.Model{ID: uint(response.Id)},
+		Title:    response.Title,
+		Content:  response.Content,
+		AuthorID: uint(response.AuthorId),
 	}, nil
 }
 
-func (c *postControllerImpl) DeletePost(id uint) error {
-	c.logger.Printf("Deleting post with ID: %d", id)
-	err := c.postUseCase.DeletePost(id)
+func (c *postController) UpdatePost(id uint, req *entity.PostRequest) (*entity.Post, error) {
+	response, err := c.client.UpdatePost(context.Background(), &proto.UpdatePostRequest{
+		PostId:  uint64(id), // Прямая передача числового ID
+		Title:   req.Title,
+		Content: req.Content,
+	})
 	if err != nil {
-		c.logger.Printf("Error deleting post %d: %v", id, err)
-		return err
+		return nil, fmt.Errorf("update failed: %w", err)
 	}
-	c.logger.Printf("Successfully deleted post with ID: %d", id)
-	return nil
+
+	return &entity.Post{
+		Model:    gorm.Model{ID: uint(response.Id)},
+		Title:    response.Title,
+		Content:  response.Content,
+		AuthorID: uint(response.AuthorId),
+	}, nil
+}
+
+func (c *postController) DeletePost(id uint) error {
+	_, err := c.client.DeletePost(context.Background(), &proto.DeletePostRequest{
+		PostId: uint64(id), // Прямая передача числового ID
+	})
+	return err
 }
