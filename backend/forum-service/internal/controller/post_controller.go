@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"backend.com/forum/proto"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/entity"
+	"github.com/lera-guryan2222/forum/proto"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 )

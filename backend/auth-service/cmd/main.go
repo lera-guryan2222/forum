@@ -96,8 +96,8 @@ func runMigrations(db *sql.DB) error {
 
 	// Правильный путь к миграциям
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://C:/Users/usr09/OneDrive/Рабочий%20стол/fooorum/backend/auth-service/internal/migrations", // Исправленный путь
-		"postgres",
+		"file://C:/Users/usr09/OneDrive/Рабочий стол/fooorum/backend/auth-service/internal/migrations", // Исправленный путь
+		"forum",
 		driver,
 	)
 	if err != nil {

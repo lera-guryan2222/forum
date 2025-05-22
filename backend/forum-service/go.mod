@@ -1,19 +1,21 @@
 module github.com/lera-guryan2222/forum/backend/forum-service
 
-go 1.21
+go 1.23.0
+
+toolchain go1.24.0
 
 require (
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	google.golang.org/grpc v1.62.1
-	google.golang.org/protobuf v1.36.6
+	github.com/lera-guryan2222/forum/proto v0.0.0
+	google.golang.org/grpc v1.66.0
 	gorm.io/driver/postgres v1.5.11
-	gorm.io/gorm v1.25.7
+	gorm.io/gorm v1.25.10
 )
 
-replace github.com/lera-guryan2222/forum/proto => ../../proto
+replace github.com/lera-guryan2222/forum/proto => ../proto
 
 require (
 	github.com/bytedance/sonic v1.13.2 // indirect
@@ -25,6 +27,10 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.26.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.5.5 // indirect
+	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -40,8 +46,10 @@ require (
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

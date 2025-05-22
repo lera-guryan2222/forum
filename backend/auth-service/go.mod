@@ -5,23 +5,22 @@ go 1.23.0
 toolchain go1.24.0
 
 require (
-	backend.com/forum/proto v0.0.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/lib/pq v1.10.9
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	golang.org/x/crypto v0.38.0
-	google.golang.org/grpc v1.64.1
 )
+
 replace backend.com/forum/proto => ../proto
+
 require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240513163218-0867130af1f8 // indirect
 )
 
 require (
@@ -60,7 +59,7 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/tools v0.26.0 // indirect
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

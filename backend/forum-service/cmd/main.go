@@ -9,12 +9,12 @@ import (
 	"os"
 	"time"
 
-	"backend.com/forum/proto"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/controller"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/delivery"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/entity"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/repository"
 	"github.com/lera-guryan2222/forum/backend/forum-service/internal/router"
+	"github.com/lera-guryan2222/forum/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/postgres"
@@ -29,7 +29,7 @@ func Connect() (*gorm.DB, error) {
 
 	user := os.Getenv("DB_USER")
 	if user == "" {
-		user = "user"
+		user = "postgres"
 	}
 
 	password := os.Getenv("DB_PASSWORD")
@@ -225,5 +225,3 @@ func (s *ForumServiceServer) ListPosts(
 
 	return &proto.ListPostsResponse{Posts: protoPosts}, nil
 }
-
-// Добавить остальные методы сервиса...
